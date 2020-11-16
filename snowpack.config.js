@@ -9,12 +9,14 @@ module.exports = {
     /* ... */
   ],
   installOptions: {
+    sourceMaps: true,
     /* ... */
   },
   devOptions: {
     /* ... */
   },
   buildOptions: {
+    sourceMaps: true,
     /* ... */
   },
   proxy: {

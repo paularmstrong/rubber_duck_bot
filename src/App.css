@@ -2,7 +2,7 @@
   text-align: center;
 }
 .App code {
-  background: #FFF3;
+  background: #fff3;
   padding: 4px 8px;
   border-radius: 4px;
 }
@@ -25,13 +25,13 @@
   color: #61dafb;
 }
 
-.App-logo {
+.Ducky {
   height: 36vmin;
   pointer-events: none;
   margin-bottom: 3rem;
-  animation: App-logo-spin infinite 1.6s ease-in-out alternate;
+  animation: Ducky-Anim infinite 1.6s ease-in-out alternate;
 }
-@keyframes App-logo-spin {
+@keyframes Ducky-Anim {
   from {
     transform: scale(1);
   }

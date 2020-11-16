@@ -2,11 +2,12 @@
   "scripts": {
     "start": "snowpack dev",
     "build": "snowpack build",
-    "test": "web-test-runner \"src/**/*.test.jsx\"",
     "format": "prettier --write \"src/**/*.{js,jsx}\""
   },
   "dependencies": {
-    "preact": "^10.4.6"
+    "express": "^4.17.1",
+    "preact": "^10.4.6",
+    "tmi.js": "^1.5.0"
   },
   "devDependencies": {
     "@prefresh/snowpack": "^2.0.1",

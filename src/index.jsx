@@ -2,5 +2,11 @@ import { h, render } from 'preact';
 import 'preact/devtools';
 import App from './App.js';
 import './index.css';
+import Bot from './bot';
 
-render(<App />, document.getElementById('root'));
+render(
+  <Bot>
+    <App />
+  </Bot>,
+  document.getElementById('root')
+);
