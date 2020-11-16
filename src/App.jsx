@@ -31,12 +31,8 @@ function App() {
   }, [showDucky]);
 
   return (
-    <div className="App">
-      {showDucky ? (
-        <div>
-          <img src={ducky} className="Ducky" alt="logo" />
-        </div>
-      ) : null}
+    <div className="app">
+      {showDucky ? <img src={ducky} className="ducky" alt="logo" /> : null}
     </div>
   );
 }
