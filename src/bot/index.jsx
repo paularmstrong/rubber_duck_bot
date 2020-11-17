@@ -46,14 +46,13 @@ const reducer = (state, action) => {
       };
     }
     case 'remove_ducky': {
-      const { userName, timestamp } = action.payload;
+      const { timestamp } = action.payload;
+      const duckies = state.duckies.filter((ducky) => {
+        return ducky.timestamp !== timestamp;
+      });
       return {
         ...state,
-        // TODO: this filter is deleting all duckies
-        duckies: state.duckies.filter(
-          (ducky) =>
-            ducky.userName !== userName && ducky.timestamp !== timestamp,
-        ),
+        duckies,
       };
     }
     default:
