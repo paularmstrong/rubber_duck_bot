@@ -34,3 +34,27 @@
     opacity: 0;
   }
 }
+
+.ducky--count {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 150px;
+  height: 150px;
+  z-index: 500;
+  font-size: 64px;
+  font-weight: bold;
+  color: #000;
+  line-height: 180px;
+  animation: appear-anim 1 0.5s ease-in-out, 0.2s ease-in 4.5s 1 disappear-anim;
+  animation-fill-mode: forwards;
+}
+
+.ducky--count img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 150px;
+  width: 150px;
+  z-index: -1;
+}

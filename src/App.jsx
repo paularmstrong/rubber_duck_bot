@@ -1,7 +1,8 @@
 import { h } from 'preact';
 import { BotContext } from './bot';
 import { Debug } from './bot/Debug';
-import Ducky from './Ducky';
+import Ducky from './Ducky/Ducky';
+import DuckyCount from './Ducky/Count';
 import { useCallback, useContext, useEffect, useState } from 'preact/hooks';
 import './App.css';
 
@@ -15,7 +16,7 @@ fetch('/squeak.m4a')
   });
 
 function App() {
-  const { duckies } = useContext(BotContext);
+  const { duckies, showCount, totalDuckies } = useContext(BotContext);
   const [interacted, setInteracted] = useState(false);
   const debug = window.location.search.includes('debug');
 
@@ -40,6 +41,7 @@ function App() {
           volume={1 / Math.pow(1.2, duckies.length)}
         />
       ))}
+      {showCount ? <DuckyCount count={totalDuckies} /> : null}
       {!debug ? null : <Debug />}
     </div>
   );

@@ -23,8 +23,25 @@ function showDucky(client, channel, context, state, dispatch) {
   }, 5000);
 }
 
+function showDuckyCount(client, channel, context, state, dispatch) {
+  const now = Date.now();
+  if (now - state.showCountTimestamp < 30000) {
+    return;
+  }
+
+  client.say(
+    channel,
+    `There have been ${state.totalDuckies} duckies in this stream.`,
+  );
+  dispatch({ type: 'show_count', payload: now });
+  setTimeout(() => {
+    dispatch({ type: 'hide_count' });
+  }, 10000);
+}
+
 export const commandMap = {
   '!ducky': showDucky,
+  '!duckycount': showDuckyCount,
   '!hello': sayHello,
   '!help': showCommands,
 };
@@ -38,6 +55,7 @@ const reducer = (state, action) => {
         ...state,
         lastSqueakTime: squeaker ? now : state.lastSqueakTime,
         duckies: [...state.duckies, { ...action.payload, squeaker }],
+        totalDuckies: state.totalDuckies + 1,
       };
     }
     case 'remove_ducky': {
@@ -46,6 +64,16 @@ const reducer = (state, action) => {
         ...state,
         duckies: state.duckies.filter((ducky) => ducky.id !== id),
       };
+    }
+    case 'show_count': {
+      return {
+        ...state,
+        showCountTimestamp: action.payload,
+        showCount: true,
+      };
+    }
+    case 'hide_count': {
+      return { ...state, showCount: false };
     }
     default:
       return state;
@@ -63,6 +91,7 @@ export const client = new tmi.client({
 const initialState = {
   lastSqueakTime: 0,
   duckies: [],
+  totalDuckies: 0,
 };
 export const BotContext = createContext({});
 
