@@ -1,6 +1,6 @@
 import tmi from 'tmi.js';
 import { createContext, h } from 'preact';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useReducer } from 'preact/hooks';
 
 // Create a client with our options
 function sayHello(client, channel, context, state, setState) {
@@ -14,27 +14,13 @@ function showCommands(client, channel, context, state, setState) {
   );
 }
 
-function showDucky(client, channel, context, state, setState) {
-  if (state.showDucky) {
-    return;
-  }
-
-  const now = Date.now();
-  const cooldown = now - state.lastDuckyShowTimestamp;
-  if (cooldown < 30000) {
-    client.say(
-      channel,
-      `Waiting ${Math.floor(
-        (30000 - cooldown) / 1000,
-      )} seconds before squeaking again.`,
-    );
-    return;
-  }
-
-  setState({ ...state, lastDuckyShowTimestamp: now, showDucky: true });
+function showDucky(client, channel, context, state, dispatch) {
+  const timestamp = Date.now();
+  const userName = context['display-name'];
+  dispatch({ type: 'add_ducky', payload: { timestamp, userName } });
   setTimeout(() => {
-    setState({ ...state, lastDuckyShowTimestamp: now, showDucky: false });
-  }, 2000);
+    dispatch({ type: 'remove_ducky', payload: { timestamp, userName } });
+  }, 5000);
 }
 
 const commandMap = {
@@ -48,6 +34,33 @@ function onConnectedHandler(addr, port) {
   console.log(`* Connected to ${addr}:${port}`);
 }
 
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'add_ducky': {
+      const now = Date.now();
+      const squeaker = now - state.lastSqueakTime >= 30000;
+      return {
+        ...state,
+        lastSqueakTime: squeaker ? now : state.lastSqueakTime,
+        duckies: [...state.duckies, { ...action.payload, squeaker }],
+      };
+    }
+    case 'remove_ducky': {
+      const { userName, timestamp } = action.payload;
+      return {
+        ...state,
+        // TODO: this filter is deleting all duckies
+        duckies: state.duckies.filter(
+          (ducky) =>
+            ducky.userName !== userName && ducky.timestamp !== timestamp,
+        ),
+      };
+    }
+    default:
+      return state;
+  }
+};
+
 const client = new tmi.client({
   identity: {
     username: import.meta.env.SNOWPACK_PUBLIC_USERNAME,
@@ -56,13 +69,14 @@ const client = new tmi.client({
   channels: [import.meta.env.SNOWPACK_PUBLIC_CHANNEL],
 });
 
+const initialState = {
+  lastSqueakTime: 0,
+  duckies: [],
+};
 export const BotContext = createContext({});
 
 export default function Bot({ children }) {
-  const [state, setState] = useState({
-    lastDuckyShowTimestamp: undefined,
-    showDucky: false,
-  });
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     client.on('connected', onConnectedHandler);
@@ -83,9 +97,9 @@ export default function Bot({ children }) {
         return;
       }
 
-      commandMap[commandName](client, target, context, state, setState);
+      commandMap[commandName](client, target, context, state, dispatch);
     },
-    [client, state, setState],
+    [client, state, dispatch],
   );
   client.removeAllListeners('message');
   client.on('message', handleMessage);
