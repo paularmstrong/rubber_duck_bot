@@ -1,20 +1,40 @@
 import { h } from 'preact';
 import ducky from './ducky.svg';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import './Ducky.css';
 
-export default function Ducky({ name, size }) {
+export default function Ducky({
+  audioContext,
+  name,
+  size,
+  squeakBuffer,
+  volume,
+}) {
   const [leftPos] = useState(
-    size === 'large' ? 10 : Math.floor(Math.min(Math.random() * 300)),
+    size === 'large' ? 1 : Math.floor(Math.min(Math.random() * 50)),
   );
-  const [width] = useState(
-    size === 'large' ? 200 : Math.floor(Math.max(Math.random() * 75, 40)),
-  );
+  const [width] = useState(Math.max(200 * volume, 50));
+  const [hasPlayed, setPlayed] = useState(false);
+
+  useEffect(() => {
+    if (hasPlayed) {
+      return;
+    }
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    gain.gain.value = volume;
+    gain.connect(audioContext.destination);
+    source.buffer = squeakBuffer;
+    source.connect(gain);
+    source.start();
+    setPlayed(true);
+    return () => {};
+  }, [audioContext, squeakBuffer, volume, hasPlayed]);
 
   return (
     <div
       className={`ducky ducky-${size}`}
-      style={size === 'large' ? {} : { left: `${leftPos}px` }}
+      style={size === 'large' ? {} : { left: `${leftPos}%` }}
     >
       <img
         src={ducky}

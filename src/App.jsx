@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { BotContext } from './bot';
+import { Debug } from './bot/Debug';
 import Ducky from './Ducky';
 import { useCallback, useContext, useEffect, useState } from 'preact/hooks';
 import './App.css';
@@ -16,15 +17,7 @@ fetch('/squeak.m4a')
 function App() {
   const { duckies } = useContext(BotContext);
   const [interacted, setInteracted] = useState(false);
-
-  useEffect(() => {
-    if (duckies.length && duckies[duckies.length - 1].squeaker) {
-      const source = audioContext.createBufferSource();
-      source.buffer = squeakBuffer;
-      source.connect(audioContext.destination);
-      source.start();
-    }
-  }, [duckies]);
+  const debug = window.location.search.includes('debug');
 
   const interactionHandler = useCallback(() => {
     setInteracted(true);
@@ -39,11 +32,15 @@ function App() {
       )}
       {duckies.map(({ userName, squeaker, timestamp }) => (
         <Ducky
+          audioContext={audioContext}
           key={`${userName}-${timestamp}`}
           name={userName}
           size={squeaker ? 'large' : 'mini'}
+          squeakBuffer={squeakBuffer}
+          volume={1 / Math.pow(1.2, duckies.length)}
         />
       ))}
+      {!debug ? null : <Debug />}
     </div>
   );
 }

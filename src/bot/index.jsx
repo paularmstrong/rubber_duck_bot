@@ -16,23 +16,18 @@ function showCommands(client, channel, context, state, setState) {
 
 function showDucky(client, channel, context, state, dispatch) {
   const timestamp = Date.now();
-  const userName = context['display-name'];
-  dispatch({ type: 'add_ducky', payload: { timestamp, userName } });
+  const { 'display-name': userName, id } = context;
+  dispatch({ type: 'add_ducky', payload: { timestamp, userName, id } });
   setTimeout(() => {
-    dispatch({ type: 'remove_ducky', payload: { timestamp, userName } });
+    dispatch({ type: 'remove_ducky', payload: { timestamp, userName, id } });
   }, 5000);
 }
 
-const commandMap = {
+export const commandMap = {
   '!ducky': showDucky,
   '!hello': sayHello,
   '!help': showCommands,
 };
-
-// // Called every time the bot connects to Twitch chat
-function onConnectedHandler(addr, port) {
-  console.log(`* Connected to ${addr}:${port}`);
-}
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -46,13 +41,10 @@ const reducer = (state, action) => {
       };
     }
     case 'remove_ducky': {
-      const { timestamp } = action.payload;
-      const duckies = state.duckies.filter((ducky) => {
-        return ducky.timestamp !== timestamp;
-      });
+      const { id } = action.payload;
       return {
         ...state,
-        duckies,
+        duckies: state.duckies.filter((ducky) => ducky.id !== id),
       };
     }
     default:
@@ -60,7 +52,7 @@ const reducer = (state, action) => {
   }
 };
 
-const client = new tmi.client({
+export const client = new tmi.client({
   identity: {
     username: import.meta.env.SNOWPACK_PUBLIC_USERNAME,
     password: import.meta.env.SNOWPACK_PUBLIC_PASSWORD,
@@ -78,9 +70,7 @@ export default function Bot({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    client.on('connected', onConnectedHandler);
     client.connect();
-
     return () => {
       client.disconnect();
     };
