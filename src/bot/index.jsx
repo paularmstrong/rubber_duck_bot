@@ -1,32 +1,40 @@
 import tmi from 'tmi.js';
 import { createContext, h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 
 // Create a client with our options
-const client = new tmi.client({
-  identity: {
-    username: import.meta.env.SNOWPACK_PUBLIC_USERNAME,
-    password: import.meta.env.SNOWPACK_PUBLIC_PASSWORD,
-  },
-  channels: [import.meta.env.SNOWPACK_PUBLIC_CHANNEL],
-});
-
-function sayHello(target, context, state, setState) {
-  client.say(target, `Hello ${context['display-name']}!`);
+function sayHello(client, channel, context, state, setState) {
+  client.say(channel, `Hello ${context['display-name']}!`);
 }
 
-function showCommands(target, context, state, setState) {
+function showCommands(client, channel, context, state, setState) {
   client.say(
-    target,
+    channel,
     `Available commands: ${Object.keys(commandMap).join(', ')}`,
   );
 }
 
-function showDucky(target, context, state, setState) {
-  setState({ ...state, showDucky: true });
+function showDucky(client, channel, context, state, setState) {
+  if (state.showDucky) {
+    return;
+  }
+
+  const now = Date.now();
+  const cooldown = now - state.lastDuckyShowTimestamp;
+  if (cooldown < 30000) {
+    client.say(
+      channel,
+      `Waiting ${Math.floor(
+        (30000 - cooldown) / 1000,
+      )} seconds before squeaking again.`,
+    );
+    return;
+  }
+
+  setState({ ...state, lastDuckyShowTimestamp: now, showDucky: true });
   setTimeout(() => {
-    setState({ ...state, showDucky: false });
-  }, 3000);
+    setState({ ...state, lastDuckyShowTimestamp: now, showDucky: false });
+  }, 2000);
 }
 
 const commandMap = {
@@ -35,34 +43,52 @@ const commandMap = {
   '!help': showCommands,
 };
 
-// Register our event handlers (defined below)
-client.on('connected', onConnectedHandler);
-
-// Connect to Twitch:
-client.connect();
-
 // // Called every time the bot connects to Twitch chat
 function onConnectedHandler(addr, port) {
   console.log(`* Connected to ${addr}:${port}`);
 }
 
+const client = new tmi.client({
+  identity: {
+    username: import.meta.env.SNOWPACK_PUBLIC_USERNAME,
+    password: import.meta.env.SNOWPACK_PUBLIC_PASSWORD,
+  },
+  channels: [import.meta.env.SNOWPACK_PUBLIC_CHANNEL],
+});
+
 export const BotContext = createContext({});
 
 export default function Bot({ children }) {
   const [state, setState] = useState({
+    lastDuckyShowTimestamp: undefined,
     showDucky: false,
   });
-  client.on('message', (target, context, msg, isSelf) => {
-    if (isSelf) {
-      return;
-    }
-    const commandName = msg.trim();
-    if (!(commandName in commandMap)) {
-      return;
-    }
 
-    commandMap[commandName](target, context, state, setState);
-  });
+  useEffect(() => {
+    client.on('connected', onConnectedHandler);
+    client.connect();
+
+    return () => {
+      client.disconnect();
+    };
+  }, []);
+
+  const handleMessage = useCallback(
+    (target, context, msg, isSelf) => {
+      if (isSelf) {
+        return;
+      }
+      const commandName = msg.trim();
+      if (!(commandName in commandMap)) {
+        return;
+      }
+
+      commandMap[commandName](client, target, context, state, setState);
+    },
+    [client, state, setState],
+  );
+  client.removeAllListeners('message');
+  client.on('message', handleMessage);
 
   return <BotContext.Provider value={state}>{children}</BotContext.Provider>;
 }
