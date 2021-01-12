@@ -44,7 +44,7 @@ export default function Ducky({
           width: `${width}px`,
         }}
       />
-      {name}
+      <span className="ducky-name">{name}</span>
     </div>
   );
 }

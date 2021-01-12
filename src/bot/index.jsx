@@ -1,3 +1,4 @@
+import advice from './advice';
 import tmi from 'tmi.js';
 import { createContext, h } from 'preact';
 import { useCallback, useEffect, useReducer } from 'preact/hooks';
@@ -39,11 +40,17 @@ function showDuckyCount(client, channel, context, state, dispatch) {
   }, 10000);
 }
 
+function giveAdvice(client, channel, context, state, dispatch) {
+  const givenAdvice = advice[Math.floor(Math.random() * advice.length)];
+  client.say(channel, givenAdvice);
+}
+
 export const commandMap = {
   '!ducky': showDucky,
   '!duckycount': showDuckyCount,
   '!hello': sayHello,
   '!help': showCommands,
+  '!advice': giveAdvice,
 };
 
 const reducer = (state, action) => {
@@ -81,6 +88,10 @@ const reducer = (state, action) => {
 };
 
 export const client = new tmi.client({
+  connection: {
+    secure: true,
+    reconnect: true,
+  },
   identity: {
     username: import.meta.env.SNOWPACK_PUBLIC_USERNAME,
     password: import.meta.env.SNOWPACK_PUBLIC_PASSWORD,
@@ -121,6 +132,13 @@ export default function Bot({ children }) {
   );
   client.removeAllListeners('message');
   client.on('message', handleMessage);
+
+  function giveRandomAdvice() {
+    const channel = import.meta.env.SNOWPACK_PUBLIC_CHANNEL;
+    giveAdvice(client, channel, {}, state, dispatch);
+    setTimeout(giveRandomAdvice, Math.floor(Math.random() * 10 * 1000 * 60));
+  }
+  setTimeout(giveRandomAdvice, Math.floor(Math.random() * 5 * 1000 * 60));
 
   return <BotContext.Provider value={state}>{children}</BotContext.Provider>;
 }

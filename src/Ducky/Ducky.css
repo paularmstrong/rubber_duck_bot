@@ -5,9 +5,15 @@
   animation-fill-mode: forwards;
   font-weight: bold;
   text-align: center;
-  text-shadow: #3a57ab 1px 1px 1px;
+}
+
+.ducky-name {
   color: #fff;
-  font-size: 12px;
+  font-size: 18px;
+  background: #3a57ab;
+  border-radius: 4px;
+  display: inline-block;
+  padding: 2px 4px;
 }
 
 .ducky-img {
