@@ -1,4 +1,5 @@
 import advice from './advice';
+import generateRandom from 'random-seed';
 import tmi from 'tmi.js';
 import { createContext, h } from 'preact';
 import { useCallback, useEffect, useReducer } from 'preact/hooks';
@@ -109,6 +110,8 @@ export const BotContext = createContext({});
 export default function Bot({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const random = generateRandom();
+
   useEffect(() => {
     client.connect();
     return () => {
@@ -136,9 +139,12 @@ export default function Bot({ children }) {
   function giveRandomAdvice() {
     const channel = import.meta.env.SNOWPACK_PUBLIC_CHANNEL;
     giveAdvice(client, channel, {}, state, dispatch);
-    setTimeout(giveRandomAdvice, Math.floor(Math.random() * 10 * 1000 * 60));
+    setTimeout(
+      giveRandomAdvice,
+      random.intBetween(5 * 60 * 1000, 10 * 60 * 1000),
+    );
   }
-  setTimeout(giveRandomAdvice, Math.floor(Math.random() * 5 * 1000 * 60));
+  setTimeout(giveRandomAdvice, random.intBetween(1 * 60 * 1000, 5 * 60 * 1000));
 
   return <BotContext.Provider value={state}>{children}</BotContext.Provider>;
 }
